@@ -1,0 +1,19 @@
+{
+  "name": "Family Budget Dashboard",
+  "short_name": "Family Budget",
+  "description": "A shared household budget dashboard for bills, paychecks, funds, and family activities.",
+  "start_url": "./family-budget-dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f7fb",
+  "theme_color": "#1f7a4d",
+  "icons": [
+    {
+      "src": "./budget-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
