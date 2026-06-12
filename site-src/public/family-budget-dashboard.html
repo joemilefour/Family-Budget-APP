@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f7a4d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Family Budget">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./budget-app-icon.svg" type="image/svg+xml">
+  <title>Family Budget Dashboard</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #667085;
+      --line: #d5dce5;
+      --paper: #f5f7fb;
+      --panel: #ffffff;
+      --green: #1f7a4d;
+      --teal: #0f766e;
+      --blue: #2563a8;
+      --gold: #b7791f;
+      --rose: #c24152;
+      --purple: #6656b8;
+      --soft: #edf8f1;
+      --cash-bg: #eaf7ef;
+      --pending-bg: #fff0ee;
+      --pay-bg: #edf5ff;
+      --paid-bg: #eef4f2;
+      --purpose-bg: #fff7df;
+      --calendar-bg: #f0efff;
+      --history-bg: #eef2f7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, #dfefff 0, rgba(245, 247, 251, 0) 340px),
+        var(--paper);
+    }
+
+    button, input, select { font: inherit; }
+
+    .app-shell {
+      width: min(1320px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      padding: 8px 0 22px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(2rem, 4vw, 4rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 800px;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .top-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: end;
+    }
+
+    .top-controls label {
+      min-width: 180px;
+    }
+
+    .button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 5px 16px rgba(37, 55, 42, .08);
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      background: #1f6f4a;
+      border-color: #1f6f4a;
+      color: white;
+    }
+
+    .button.danger {
+      border-color: #f0c7cd;
+      color: var(--rose);
+    }
+
+    .button:focus-visible, input:focus, select:focus {
+      outline: 3px solid rgba(31, 118, 111, .24);
+      outline-offset: 2px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    section, .metric, .row-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 28px rgba(31, 41, 51, .08);
+    }
+
+    section {
+      padding: 18px;
+      border-top: 7px solid var(--line);
+    }
+
+    .overview, .history-card { grid-column: span 12; }
+    .pay-card, .paid-card, .purpose-card, .calendar-card, .chart-card { grid-column: span 6; }
+    .bill-card { grid-column: span 12; }
+    .bill-card { order: 1; }
+    .pay-card { order: 2; }
+    .paid-card { order: 3; }
+    .purpose-card { order: 4; }
+    .chart-card { order: 5; }
+    .calendar-card { order: 6; }
+    .history-card { order: 7; }
+
+    .overview {
+      background: linear-gradient(180deg, var(--cash-bg), #ffffff 185px);
+      border-top-color: var(--green);
+    }
+
+    .bill-card {
+      background: linear-gradient(180deg, var(--pending-bg), #ffffff 155px);
+      border-top-color: var(--rose);
+    }
+
+    .pay-card {
+      background: linear-gradient(180deg, var(--pay-bg), #ffffff 155px);
+      border-top-color: var(--blue);
+    }
+
+    .paid-card {
+      background: linear-gradient(180deg, var(--paid-bg), #ffffff 155px);
+      border-top-color: var(--teal);
+    }
+
+    .purpose-card {
+      background: linear-gradient(180deg, var(--purpose-bg), #ffffff 155px);
+      border-top-color: var(--gold);
+    }
+
+    .calendar-card {
+      background: linear-gradient(180deg, var(--calendar-bg), #ffffff 155px);
+      border-top-color: var(--purple);
+    }
+
+    .chart-card {
+      background: linear-gradient(180deg, #eef7ff, #ffffff 155px);
+      border-top-color: #1976a3;
+    }
+
+    .history-card {
+      background: linear-gradient(180deg, var(--history-bg), #ffffff 155px);
+      border-top-color: #475467;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.08rem;
+      line-height: 1.2;
+    }
+
+    h2::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      margin-right: 8px;
+      vertical-align: 1px;
+      background: currentColor;
+    }
+
+    .overview h2 { color: #145c38; }
+    .bill-card h2 { color: #a73546; }
+    .pay-card h2 { color: #245b94; }
+    .paid-card h2 { color: #0d665f; }
+    .purpose-card h2 { color: #8a5a11; }
+    .calendar-card h2 { color: #5646a3; }
+    .chart-card h2 { color: #17658b; }
+    .history-card h2 { color: #344054; }
+
+    .hint {
+      color: var(--muted);
+      font-size: .9rem;
+      margin: 4px 0 0;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 16px;
+      min-height: 118px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, .9);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(1.55rem, 3vw, 2.45rem);
+      line-height: 1;
+      margin-top: 12px;
+    }
+
+    .metric.income { border-top: 5px solid var(--green); }
+    .metric.expense { border-top: 5px solid var(--rose); }
+    .metric.savings { border-top: 5px solid var(--blue); }
+    .metric.status { border-top: 5px solid var(--teal); }
+    .metric.cash { border-top: 5px solid var(--gold); }
+
+    .overview .metric.cash { background: #fff8e7; }
+    .overview .metric.income { background: #edf8f1; }
+    .overview .metric.expense { background: #fff1f0; }
+    .overview .metric.status { background: #eaf7f5; }
+    .overview .metric.savings { background: #edf5ff; }
+
+    .status-line {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--soft);
+      border: 1px solid #cfe9d6;
+      color: #1d603a;
+      font-weight: 650;
+    }
+
+    .status-line.warn {
+      background: #fff5f0;
+      border-color: #f2cbbd;
+      color: #8b3f26;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .row-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row-card {
+      box-shadow: none;
+      padding: 12px;
+      background: rgba(255, 255, 255, .92);
+    }
+
+    .bill-card .row-card {
+      border-left: 5px solid var(--rose);
+    }
+
+    .pay-card .row-card {
+      border-left: 5px solid var(--blue);
+    }
+
+    .paid-card .row-card {
+      border-left: 5px solid var(--teal);
+      background: #f7fbfa;
+    }
+
+    .purpose-card .row-card {
+      border-left: 5px solid var(--gold);
+    }
+
+    .chart-wrap {
+      display: grid;
+      grid-template-columns: minmax(160px, 220px) 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .donut {
+      width: min(100%, 220px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--line) 0 100%);
+      position: relative;
+      margin: 0 auto;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04);
+    }
+
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 22%;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .chart-total {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      z-index: 1;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .chart-total span {
+      display: block;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .legend-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 12px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      font-size: .9rem;
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .legend-row strong {
+      font-weight: 750;
+    }
+
+    .pay-row {
+      display: grid;
+      grid-template-columns: .9fr .8fr .8fr .75fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .bill-row {
+      display: grid;
+      grid-template-columns: 1.1fr .62fr .5fr auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .purpose-row {
+      display: grid;
+      grid-template-columns: 1fr .68fr .78fr;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 700;
+      background: #edf3ee;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: .92rem;
+    }
+
+    .bar-track {
+      height: 12px;
+      background: #edf1ed;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0;
+      background: var(--green);
+      border-radius: inherit;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .timeline-item:last-child { border-bottom: 0; }
+
+    .date-chip {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+      background: var(--teal);
+    }
+
+    .timeline-item strong { display: block; }
+    .timeline-item small { color: var(--muted); }
+
+    .calendar-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .google-links {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      max-height: 300px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .google-links a {
+      color: var(--blue);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(38, 95, 159, .25);
+      width: fit-content;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+    }
+
+    .history-table th, .history-table td {
+      text-align: left;
+      padding: 11px 9px;
+      border-bottom: 1px solid var(--line);
+      font-size: .92rem;
+    }
+
+    .history-table th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f3f7f2;
+    }
+
+    .history-table td:last-child, .history-table th:last-child {
+      text-align: right;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      padding: 12px 0;
+    }
+
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: linear-gradient(180deg, #dfefff, #f5f7fb);
+    }
+
+    .lock-screen[hidden] {
+      display: none;
+    }
+
+    .lock-card {
+      width: min(100%, 420px);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-top: 7px solid var(--green);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 18px 48px rgba(31, 41, 51, .16);
+    }
+
+    .lock-card h2 {
+      color: #145c38;
+      margin-bottom: 6px;
+    }
+
+    .lock-card .button {
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .lock-error {
+      color: var(--rose);
+      min-height: 22px;
+      margin: 10px 0 0;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 1060px) {
+      header { grid-template-columns: 1fr; align-items: start; }
+      .top-controls { justify-content: flex-start; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pay-card, .bill-card, .paid-card, .purpose-card, .calendar-card, .chart-card { grid-column: span 12; }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell { width: min(100% - 20px, 1320px); padding-top: 14px; }
+      section { padding: 14px; }
+      .metrics, .calendar-actions { grid-template-columns: 1fr; }
+      .pay-row, .bill-row, .purpose-row {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+      .chart-wrap {
+        grid-template-columns: 1fr;
+      }
+      .timeline-item {
+        grid-template-columns: 40px 1fr;
+      }
+      .timeline-item .amount {
+        grid-column: 2;
+        justify-self: start;
+      }
+      .date-chip { width: 40px; height: 40px; }
+      .history-table { min-width: 720px; }
+      .history-scroll { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lock-screen" id="lockScreen" hidden>
+    <form class="lock-card" id="pinForm">
+      <h2>Family Budget</h2>
+      <p class="hint">Enter the household PIN to open the shared budget.</p>
+      <label>Household PIN
+        <input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password">
+      </label>
+      <button class="button primary" type="submit">Open budget</button>
+      <p class="lock-error" id="pinError"></p>
+    </form>
+  </div>
+  <main class="app-shell">
+    <header>
+      <div>
+        <h1>Family Budget Dashboard</h1>
+        <p class="subtitle">Start with the bank balance, mark paychecks as received, mark bills as paid, and keep the unpaid bills at the top.</p>
+      </div>
+      <div class="top-controls">
+        <label>Budget month
+          <input id="activeMonth" type="month">
+        </label>
+        <button class="button" id="saveSnapshotBtn" type="button">Save month snapshot</button>
+        <button class="button primary" id="saveBtn" type="button">Save plan</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="overview">
+        <div class="section-head">
+          <div>
+            <h2>Money Right Now</h2>
+            <p class="hint">Current bank total is starting balance plus received paychecks minus paid bills.</p>
+          </div>
+          <span class="pill" id="budgetMode">Zero-based</span>
+        </div>
+        <label style="max-width: 320px; margin-bottom: 12px;">Starting bank balance
+          <input id="bankBalance" type="number" min="0" step="1">
+        </label>
+        <div class="metrics">
+          <div class="metric cash">
+            <span>Current bank total</span>
+            <strong id="bankBalanceMetric">$0</strong>
+          </div>
+          <div class="metric income">
+            <span>Received pay</span>
+            <strong id="receivedPay">$0</strong>
+          </div>
+          <div class="metric expense">
+            <span>Paid bills</span>
+            <strong id="paidBills">$0</strong>
+          </div>
+          <div class="metric expense">
+            <span>Pending bills</span>
+            <strong id="unpaidBills">$0</strong>
+          </div>
+          <div class="metric status">
+            <span>Safe after pending</span>
+            <strong id="safeBalance">$0</strong>
+          </div>
+          <div class="metric savings">
+            <span>Family activities</span>
+            <strong id="totalGoals">$0</strong>
+          </div>
+        </div>
+        <div class="status-line" id="statusLine"></div>
+      </section>
+
+      <section class="pay-card">
+        <div class="section-head">
+          <div>
+            <h2>Paychecks</h2>
+            <p class="hint">Edit each amount when the money hits the account. Your checks are set for the 1st and 15th. Your wife's checks repeat every two weeks from June 18, 2026.</p>
+          </div>
+          <button class="button" id="addPayBtn" type="button">Add pay</button>
+        </div>
+        <div class="row-list" id="payList"></div>
+      </section>
+
+      <section class="bill-card">
+        <div class="section-head">
+          <div>
+            <h2>Pending Bills</h2>
+            <p class="hint">These are the bills that still need to be paid this month.</p>
+          </div>
+          <button class="button" id="addBillBtn" type="button">Add bill</button>
+        </div>
+        <div class="row-list" id="billList"></div>
+      </section>
+
+      <section class="paid-card">
+        <div class="section-head">
+          <div>
+            <h2>Paid Bills</h2>
+            <p class="hint">Paid bills roll down here so the pending list stays clean.</p>
+          </div>
+        </div>
+        <div class="row-list" id="paidBillList"></div>
+      </section>
+
+      <section class="purpose-card">
+        <div class="section-head">
+          <div>
+            <h2>Every Dollar's Purpose</h2>
+            <p class="hint">House, emergency, and miscellaneous stay fixed. Family activities receives the remaining balance.</p>
+          </div>
+          <button class="button" id="balanceBtn" type="button">Balance family activities</button>
+        </div>
+        <div class="row-list" id="purposeList"></div>
+      </section>
+
+      <section class="chart-card">
+        <div class="section-head">
+          <div>
+            <h2>Expense And Fund Breakdown</h2>
+            <p class="hint">A quick view of where the monthly plan is going.</p>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="donut" id="breakdownDonut">
+            <div class="chart-total" id="breakdownTotal">$0<span>Total planned</span></div>
+          </div>
+          <div class="legend-list" id="breakdownLegend"></div>
+        </div>
+      </section>
+
+      <section class="calendar-card">
+        <div class="section-head">
+          <div>
+            <h2>Google Calendar Alerts</h2>
+            <p class="hint">Download reminders for bills or use the one-click Google Calendar links.</p>
+          </div>
+        </div>
+        <label>Reminder lead time
+          <select id="alertDays">
+            <option value="0">Same day</option>
+            <option value="1">1 day before</option>
+            <option value="2">2 days before</option>
+            <option value="3">3 days before</option>
+            <option value="7">1 week before</option>
+          </select>
+        </label>
+        <div class="calendar-actions">
+          <button class="button primary" id="downloadIcsBtn" type="button">Download reminders</button>
+          <button class="button" id="copySummaryBtn" type="button">Copy bill list</button>
+        </div>
+        <div class="google-links" id="googleLinks"></div>
+      </section>
+
+      <section class="history-card">
+        <div class="section-head">
+          <div>
+            <h2>Month-Over-Month Tracking</h2>
+            <p class="hint">Save a snapshot at the end of each month to compare income, spending, savings, and family activities.</p>
+          </div>
+        </div>
+        <div class="history-scroll">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Income</th>
+                <th>Bills</th>
+                <th>Goals</th>
+                <th>Family activities</th>
+                <th>Safe balance</th>
+                <th>Left</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="historyRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const storageKey = "family-budget-dashboard-v2";
+    const sessionKey = "family-budget-pin-ok";
+    const cloudConfig = {
+      supabaseUrl: "https://wactmtglpqqtnwjcroxs.supabase.co",
+      supabaseAnonKey: "sb_publishable_-IAVqWnV3e2szm-LI10jQg_gnpLITbe",
+      householdId: "family-budget-4bbbfefc6aa0",
+      pinHash: "2d6c50388f532bd1bbe52e5a25fad2a7fd3955bb2855b0b72cd28765e78b62e9"
+    };
+    const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const today = new Date();
+    const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
+    const baseBills = [
+      { name: "Rent", category: "Housing", amount: 350, dueDay: 1, cadence: "monthly", paid: false, note: "Due on the 1st" },
+      { name: "Water", category: "Utilities", amount: 90, dueDay: 3, cadence: "monthly", paid: false, note: "$75-$100 range" },
+      { name: "Internet", category: "Utilities", amount: 129, dueDay: 10, cadence: "monthly", paid: false, note: "Adjust due date if needed" },
+      { name: "Light", category: "Utilities", amount: 275, dueDay: 14, cadence: "monthly", paid: false, note: "$250-$300 range" },
+      { name: "Debt payment", category: "Debt", amount: 818, dueDay: 16, cadence: "monthly", paid: false, note: "Credit card and loan" },
+      { name: "Groceries", category: "Groceries", amount: 700, dueDay: 7, cadence: "biweekly", paid: false, note: "Every two weeks" },
+      { name: "Babysitter", category: "Childcare", amount: 180, dueDay: 12, cadence: "biweekly", paid: false, note: "Every two weeks" },
+      { name: "Yard maintenance", category: "Home upkeep", amount: 50, dueDay: 13, cadence: "biweekly", paid: false, note: "Twice a month" },
+      { name: "Gym membership", category: "Health", amount: 75, dueDay: 20, cadence: "monthly", paid: false, note: "Adjust due date if needed" },
+      { name: "Phone plan", category: "Phone", amount: 45, dueDay: 22, cadence: "monthly", paid: false, note: "Adjust due date if needed" }
+    ];
+
+    const basePurposes = [
+      { name: "House fund", category: "House fund", amount: 300, locked: true },
+      { name: "Emergency fund", category: "Emergency fund", amount: 250, locked: true },
+      { name: "Miscellaneous", category: "Miscellaneous", amount: 750, locked: true },
+      { name: "Family activities", category: "Family activities", amount: 0, autoBalance: true }
+    ];
+
+    const defaults = {
+      activeMonth: thisMonth,
+      alertDays: 3,
+      months: {},
+      history: []
+    };
+
+    let state = loadState();
+    let cloudReady = false;
+    const byId = (id) => document.getElementById(id);
+    const isCloudConfigured = () => Boolean(cloudConfig.supabaseUrl && cloudConfig.supabaseAnonKey && cloudConfig.householdId);
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        return saved ? { ...structuredClone(defaults), ...saved } : structuredClone(defaults);
+      } catch {
+        return structuredClone(defaults);
+      }
+    }
+
+    async function saveState(showSaved = true) {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+      syncToCloud();
+      if (!showSaved) return;
+      byId("saveBtn").textContent = "Saved";
+      setTimeout(() => byId("saveBtn").textContent = "Save plan", 1200);
+    }
+
+    async function loadCloudState() {
+      if (!isCloudConfigured()) return;
+      try {
+        const response = await fetch(`${cloudConfig.supabaseUrl}/rest/v1/household_budgets?household_id=eq.${encodeURIComponent(cloudConfig.householdId)}&select=budget_data`, {
+          headers: cloudHeaders()
+        });
+        if (!response.ok) throw new Error("Cloud load failed");
+        const rows = await response.json();
+        if (rows[0]?.budget_data) {
+          state = { ...structuredClone(defaults), ...rows[0].budget_data };
+          localStorage.setItem(storageKey, JSON.stringify(state));
+        } else {
+          await syncToCloud(true);
+        }
+        cloudReady = true;
+      } catch {
+        cloudReady = false;
+      }
+    }
+
+    let syncTimer;
+    function syncToCloud(force = false) {
+      if (!isCloudConfigured()) return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => pushCloudState(), force ? 0 : 500);
+    }
+
+    async function pushCloudState() {
+      try {
+        const response = await fetch(`${cloudConfig.supabaseUrl}/rest/v1/household_budgets`, {
+          method: "POST",
+          headers: {
+            ...cloudHeaders(),
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates"
+          },
+          body: JSON.stringify({
+            household_id: cloudConfig.householdId,
+            budget_data: state,
+            updated_at: new Date().toISOString()
+          })
+        });
+        cloudReady = response.ok;
+      } catch {
+        cloudReady = false;
+      }
+    }
+
+    function cloudHeaders() {
+      return {
+        apikey: cloudConfig.supabaseAnonKey,
+        Authorization: `Bearer ${cloudConfig.supabaseAnonKey}`
+      };
+    }
+
+    async function sha256(text) {
+      const data = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest("SHA-256", data);
+      return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function unlockWithPin(pin) {
+      if (!cloudConfig.pinHash) return true;
+      return await sha256(pin) === cloudConfig.pinHash;
+    }
+
+    async function startApp() {
+      if (cloudConfig.pinHash && sessionStorage.getItem(sessionKey) !== "true") {
+        byId("lockScreen").hidden = false;
+        byId("pinInput").focus();
+        return;
+      }
+      byId("lockScreen").hidden = true;
+      await loadCloudState();
+      render();
+    }
+
+    function getPlan(month = state.activeMonth) {
+      if (!state.months[month]) {
+        state.months[month] = {
+          bankBalance: 0,
+          paychecks: generatePaychecks(month),
+          bills: structuredClone(baseBills),
+          purposes: structuredClone(basePurposes)
+        };
+      }
+      ensurePlanShape(state.months[month]);
+      balanceFamilyActivities(state.months[month]);
+      return state.months[month];
+    }
+
+    function ensurePlanShape(plan) {
+      if (typeof plan.bankBalance !== "number") plan.bankBalance = 0;
+      plan.bills.forEach((bill) => {
+        if (typeof bill.paid !== "boolean") bill.paid = false;
+      });
+      basePurposes.forEach((basePurpose) => {
+        const exists = plan.purposes.some((purpose) => purpose.name === basePurpose.name);
+        if (!exists) {
+          const familyIndex = plan.purposes.findIndex((purpose) => purpose.autoBalance);
+          const insertAt = familyIndex >= 0 ? familyIndex : plan.purposes.length;
+          plan.purposes.splice(insertAt, 0, structuredClone(basePurpose));
+        }
+      });
+    }
+
+    function generatePaychecks(month) {
+      const [year, monthNumber] = month.split("-").map(Number);
+      const rows = [
+        { source: "Your paycheck", date: `${month}-01`, amount: 2492, received: false },
+        { source: "Your paycheck", date: `${month}-15`, amount: 2492, received: false }
+      ];
+      const wifeAnchor = new Date(2026, 5, 18);
+      const monthStart = new Date(year, monthNumber - 1, 1);
+      const monthEnd = new Date(year, monthNumber, 0);
+      const first = new Date(wifeAnchor);
+      while (first < monthStart) first.setDate(first.getDate() + 14);
+      while (first <= monthEnd) {
+        rows.push({ source: "Wife paycheck", date: isoDate(first), amount: 1500, received: false });
+        first.setDate(first.getDate() + 14);
+      }
+      return rows.sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function render() {
+      const plan = getPlan();
+      balanceFamilyActivities(plan);
+      byId("activeMonth").value = state.activeMonth;
+      byId("alertDays").value = state.alertDays;
+      byId("bankBalance").value = Math.round(plan.bankBalance || 0);
+      renderPaychecks(plan);
+      renderBills(plan);
+      renderPurposes(plan);
+      renderTotals(plan);
+      renderBreakdownChart(plan);
+      renderGoogleLinks(plan);
+      renderHistory();
+      saveState(false);
+    }
+
+    function renderPaychecks(plan) {
+      const list = byId("payList");
+      list.innerHTML = "";
+      plan.paychecks.forEach((pay, index) => {
+        const row = document.createElement("div");
+        row.className = "row-card pay-row";
+        row.innerHTML = `
+          <label>Who
+            <input data-pay="${index}" data-field="source" value="${escapeHtml(pay.source)}">
+          </label>
+          <label>Date
+            <input data-pay="${index}" data-field="date" type="date" value="${pay.date}">
+          </label>
+          <label>Amount
+            <input data-pay="${index}" data-field="amount" type="number" min="0" step="1" value="${Math.round(pay.amount)}">
+          </label>
+          <label>Status
+            <select data-pay="${index}" data-field="received">
+              <option value="false" ${pay.received ? "" : "selected"}>Expected</option>
+              <option value="true" ${pay.received ? "selected" : ""}>Received</option>
+            </select>
+          </label>
+          <button class="button danger" data-remove-pay="${index}" type="button">Remove</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function renderBills(plan) {
+      renderBillGroup(byId("billList"), plan, false);
+      renderBillGroup(byId("paidBillList"), plan, true);
+    }
+
+    function renderBillGroup(list, plan, paidStatus) {
+      const rows = plan.bills
+        .map((bill, index) => ({ bill, index }))
+        .filter(({ bill }) => Boolean(bill.paid) === paidStatus)
+        .sort((a, b) => clampDueDay(a.bill.dueDay) - clampDueDay(b.bill.dueDay));
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty-state">${paidStatus ? "No paid bills yet." : "No pending bills. Nice and clean."}</div>`;
+        return;
+      }
+      list.innerHTML = "";
+      rows.forEach(({ bill, index }) => {
+        const row = document.createElement("div");
+        row.className = "row-card bill-row";
+        row.innerHTML = `
+          <label>Bill
+            <input data-bill="${index}" data-field="name" value="${escapeHtml(bill.name)}">
+          </label>
+          <label>Amount
+            <input data-bill="${index}" data-field="amount" type="number" min="0" step="1" value="${Math.round(bill.amount)}">
+          </label>
+          <label>Due
+            <input data-bill="${index}" data-field="dueDay" type="number" min="1" max="28" step="1" value="${bill.dueDay}">
+          </label>
+          <button class="button primary" data-mark-bill="${index}" data-paid="${paidStatus ? "false" : "true"}" type="button">${paidStatus ? "Move back" : "Mark paid"}</button>
+          <button class="button danger" data-remove-bill="${index}" type="button">Remove</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function renderPurposes(plan) {
+      const list = byId("purposeList");
+      list.innerHTML = "";
+      plan.purposes.forEach((purpose, index) => {
+        const row = document.createElement("div");
+        row.className = "row-card purpose-row";
+        row.innerHTML = `
+          <label>Purpose
+            <input data-purpose="${index}" data-field="name" value="${escapeHtml(purpose.name)}">
+          </label>
+          <label>Category
+            <input data-purpose="${index}" data-field="category" value="${escapeHtml(purpose.category)}">
+          </label>
+          <label>Monthly amount
+            <input data-purpose="${index}" data-field="amount" type="number" min="0" step="1" value="${Math.round(purpose.amount)}" ${purpose.autoBalance ? "readonly" : ""}>
+          </label>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function renderTotals(plan) {
+      const income = payTotal(plan);
+      const expenses = billTotal(plan);
+      balanceFamilyActivities(plan);
+      const left = income - expenses - purposeTotal(plan);
+      const received = receivedPayTotal(plan);
+      const paid = paidBillTotal(plan);
+      const currentBank = currentBankTotal(plan);
+      const unpaid = unpaidBillTotal(plan);
+      const safe = currentBank - unpaid;
+      byId("bankBalanceMetric").textContent = fmt.format(currentBank);
+      byId("receivedPay").textContent = fmt.format(received);
+      byId("paidBills").textContent = fmt.format(paid);
+      byId("unpaidBills").textContent = fmt.format(unpaid);
+      byId("safeBalance").textContent = fmt.format(safe);
+      byId("safeBalance").style.color = safe < 0 ? "var(--rose)" : "inherit";
+      byId("totalGoals").textContent = fmt.format(familyActivitiesAmount(plan));
+      byId("budgetMode").textContent = Math.abs(left) <= 1 ? "Every dollar assigned" : "Needs attention";
+      byId("statusLine").className = left < -1 || safe < 0 ? "status-line warn" : "status-line";
+      byId("statusLine").textContent = safe < 0
+        ? `After pending bills, this month is short by ${fmt.format(Math.abs(safe))}.`
+        : left < -1
+          ? `This month is short by ${fmt.format(Math.abs(left))}. Family activities is at $0, so lower a bill/purpose or add income.`
+          : `${fmt.format(safe)} is safe after pending bills. Current bank total is starting balance plus received pay minus paid bills.`;
+    }
+
+    function renderBreakdownChart(plan) {
+      const rows = breakdownRows(plan);
+      const total = rows.reduce((sum, row) => sum + row.amount, 0) || 1;
+      const colors = ["#c24152", "#2563a8", "#0f766e", "#b7791f", "#6656b8", "#1f7a4d", "#1976a3", "#8a4f7d", "#667085", "#d97706", "#0891b2", "#be123c"];
+      let cursor = 0;
+      const stops = rows.map((row, index) => {
+        const start = cursor;
+        const end = cursor + (row.amount / total) * 100;
+        cursor = end;
+        return `${colors[index % colors.length]} ${start}% ${end}%`;
+      });
+      byId("breakdownDonut").style.background = `conic-gradient(${stops.join(", ")})`;
+      byId("breakdownTotal").innerHTML = `${fmt.format(total)}<span>Total planned</span>`;
+      byId("breakdownLegend").innerHTML = rows.map((row, index) => {
+        const percent = Math.round(row.amount / total * 100);
+        return `
+          <div class="legend-row">
+            <span class="legend-swatch" style="background:${colors[index % colors.length]}"></span>
+            <strong>${escapeHtml(row.name)}</strong>
+            <span>${fmt.format(row.amount)} - ${percent}%</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function breakdownRows(plan) {
+      const totals = new Map();
+      plan.bills.forEach((bill) => addCategory(totals, bill.category || bill.name, monthlyAmount(bill)));
+      plan.purposes.forEach((purpose) => addCategory(totals, purpose.name || purpose.category, Number(purpose.amount) || 0));
+      return [...totals.entries()]
+        .map(([name, amount]) => ({ name, amount }))
+        .filter((row) => row.amount > 0)
+        .sort((a, b) => b.amount - a.amount);
+    }
+
+    function renderTimeline(plan) {
+      const billItems = plan.bills.map((bill) => ({
+        day: clampDueDay(bill.dueDay),
+        title: bill.name,
+        detail: `${bill.paid ? "Paid" : "Unpaid"} - ${bill.category} - ${bill.cadence === "biweekly" ? "Every 2 weeks" : "Monthly"}`,
+        amount: monthlyAmount(bill),
+        kind: "bill"
+      }));
+      const payItems = plan.paychecks.map((pay) => ({
+        day: Number(pay.date.slice(-2)),
+        title: pay.source,
+        detail: pay.received ? "Received" : "Expected",
+        amount: Number(pay.amount) || 0,
+        kind: "pay"
+      }));
+      byId("timeline").innerHTML = [...billItems, ...payItems]
+        .sort((a, b) => a.day - b.day || a.kind.localeCompare(b.kind))
+        .map((item) => `
+          <div class="timeline-item">
+            <div class="date-chip" style="background:${item.kind === "pay" ? "var(--green)" : "var(--teal)"}">${item.day}</div>
+            <div>
+              <strong>${escapeHtml(item.title)}</strong>
+              <small>${escapeHtml(item.detail)}</small>
+            </div>
+            <strong class="amount">${fmt.format(item.amount)}</strong>
+          </div>
+        `).join("");
+    }
+
+    function renderGoogleLinks(plan) {
+      byId("googleLinks").innerHTML = plan.bills
+        .slice()
+        .sort((a, b) => clampDueDay(a.dueDay) - clampDueDay(b.dueDay))
+        .map((bill) => {
+          const date = eventDateForBill(bill);
+          const end = new Date(date);
+          end.setDate(end.getDate() + 1);
+          const params = new URLSearchParams({
+            action: "TEMPLATE",
+            text: `Pay ${bill.name}`,
+            details: `${bill.name}: ${fmt.format(bill.amount)}. ${bill.note || ""}`,
+            dates: `${toIcsDate(date)}/${toIcsDate(end)}`
+          });
+          return `<a href="https://calendar.google.com/calendar/render?${params.toString()}" target="_blank" rel="noreferrer">Add ${escapeHtml(bill.name)} to Google Calendar</a>`;
+        }).join("");
+    }
+
+    function renderHistory() {
+      const rows = byId("historyRows");
+      if (!state.history.length) {
+        rows.innerHTML = `<tr><td colspan="8" class="empty-state">No snapshots saved yet.</td></tr>`;
+        return;
+      }
+      rows.innerHTML = state.history
+        .slice()
+        .sort((a, b) => b.month.localeCompare(a.month))
+        .map((item) => `
+          <tr>
+            <td>${monthLabel(item.month)}</td>
+            <td>${fmt.format(item.income)}</td>
+            <td>${fmt.format(item.expenses)}</td>
+            <td>${fmt.format(item.goals)}</td>
+            <td>${fmt.format(item.familyActivities)}</td>
+            <td>${fmt.format(item.safeBalance || 0)}</td>
+            <td>${fmt.format(item.left)}</td>
+            <td><button class="button danger" data-remove-history="${item.month}" type="button">Remove</button></td>
+          </tr>
+        `).join("");
+    }
+
+    function balanceFamilyActivities(plan) {
+      const family = plan.purposes.find((item) => item.autoBalance) || plan.purposes.find((item) => item.name.toLowerCase().includes("family"));
+      if (!family) return;
+      const fixedPurposes = plan.purposes.reduce((sum, item) => sum + (item === family ? 0 : Number(item.amount) || 0), 0);
+      family.amount = Math.max(0, Math.round(payTotal(plan) - billTotal(plan) - fixedPurposes));
+    }
+
+    function payTotal(plan) {
+      return plan.paychecks.reduce((sum, pay) => sum + (Number(pay.amount) || 0), 0);
+    }
+
+    function receivedPayTotal(plan) {
+      return plan.paychecks.reduce((sum, pay) => sum + (pay.received ? Number(pay.amount) || 0 : 0), 0);
+    }
+
+    function billTotal(plan) {
+      return plan.bills.reduce((sum, bill) => sum + monthlyAmount(bill), 0);
+    }
+
+    function unpaidBillTotal(plan) {
+      return plan.bills.reduce((sum, bill) => sum + (bill.paid ? 0 : Number(bill.amount) || 0), 0);
+    }
+
+    function paidBillTotal(plan) {
+      return plan.bills.reduce((sum, bill) => sum + (bill.paid ? Number(bill.amount) || 0 : 0), 0);
+    }
+
+    function currentBankTotal(plan) {
+      return (Number(plan.bankBalance) || 0) + receivedPayTotal(plan) - paidBillTotal(plan);
+    }
+
+    function purposeTotal(plan) {
+      return plan.purposes.reduce((sum, purpose) => sum + (Number(purpose.amount) || 0), 0);
+    }
+
+    function familyActivitiesAmount(plan) {
+      const family = plan.purposes.find((item) => item.autoBalance) || {};
+      return Number(family.amount) || 0;
+    }
+
+    function monthlyAmount(item) {
+      return item.cadence === "biweekly" ? (Number(item.amount) || 0) * 26 / 12 : Number(item.amount) || 0;
+    }
+
+    function addCategory(map, category, amount) {
+      map.set(category || "Other", (map.get(category || "Other") || 0) + amount);
+    }
+
+    function saveSnapshot() {
+      const plan = getPlan();
+      balanceFamilyActivities(plan);
+      const snapshot = {
+        month: state.activeMonth,
+        income: Math.round(payTotal(plan)),
+        expenses: Math.round(billTotal(plan)),
+        goals: Math.round(purposeTotal(plan)),
+        familyActivities: Math.round(familyActivitiesAmount(plan)),
+        bankBalance: Math.round(currentBankTotal(plan)),
+        unpaidBills: Math.round(unpaidBillTotal(plan)),
+        safeBalance: Math.round(currentBankTotal(plan) - unpaidBillTotal(plan)),
+        left: Math.round(payTotal(plan) - billTotal(plan) - purposeTotal(plan))
+      };
+      state.history = state.history.filter((item) => item.month !== state.activeMonth);
+      state.history.push(snapshot);
+      saveState();
+      renderHistory();
+      byId("saveSnapshotBtn").textContent = "Snapshot saved";
+      setTimeout(() => byId("saveSnapshotBtn").textContent = "Save month snapshot", 1200);
+    }
+
+    function eventDateForBill(bill) {
+      const [year, month] = state.activeMonth.split("-").map(Number);
+      return new Date(year, month - 1, clampDueDay(bill.dueDay));
+    }
+
+    function downloadIcs() {
+      const plan = getPlan();
+      const alarmDays = Number(state.alertDays) || 0;
+      const events = plan.bills.map((bill) => {
+        const start = eventDateForBill(bill);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+        const recurrence = bill.cadence === "biweekly" ? "FREQ=WEEKLY;INTERVAL=2" : "FREQ=MONTHLY";
+        return [
+          "BEGIN:VEVENT",
+          `UID:${crypto.randomUUID()}@family-budget-dashboard`,
+          `DTSTAMP:${toIcsDateTime(new Date())}`,
+          `DTSTART;VALUE=DATE:${toIcsDate(start)}`,
+          `DTEND;VALUE=DATE:${toIcsDate(end)}`,
+          `RRULE:${recurrence}`,
+          `SUMMARY:Pay ${escapeIcs(bill.name)}`,
+          `DESCRIPTION:${escapeIcs(`${bill.name}: ${fmt.format(bill.amount)}. ${bill.note || ""}`)}`,
+          "BEGIN:VALARM",
+          `TRIGGER:${alarmDays === 0 ? "-PT0M" : `-P${alarmDays}D`}`,
+          "ACTION:DISPLAY",
+          `DESCRIPTION:Reminder to pay ${escapeIcs(bill.name)}`,
+          "END:VALARM",
+          "END:VEVENT"
+        ].join("\r\n");
+      }).join("\r\n");
+
+      const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Family Budget Dashboard//EN",
+        "CALSCALE:GREGORIAN",
+        events,
+        "END:VCALENDAR"
+      ].join("\r\n");
+
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bill-reminders-${state.activeMonth}.ics`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function copySummary() {
+      const plan = getPlan();
+      const text = plan.bills
+        .slice()
+        .filter((bill) => !bill.paid)
+        .sort((a, b) => clampDueDay(a.dueDay) - clampDueDay(b.dueDay))
+        .map((bill) => `${bill.name}: ${fmt.format(bill.amount)} due day ${clampDueDay(bill.dueDay)} (${bill.cadence})`)
+        .join("\n");
+      await navigator.clipboard.writeText(text);
+      byId("copySummaryBtn").textContent = "Copied";
+      setTimeout(() => byId("copySummaryBtn").textContent = "Copy bill list", 1200);
+    }
+
+    function isoDate(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function toIcsDate(date) {
+      return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function toIcsDateTime(date) {
+      return `${toIcsDate(date)}T${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}${String(date.getSeconds()).padStart(2, "0")}`;
+    }
+
+    function monthLabel(month) {
+      const [year, monthNumber] = month.split("-").map(Number);
+      return new Date(year, monthNumber - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    }
+
+    function clampDueDay(day) {
+      return Math.max(1, Math.min(28, Number(day) || 1));
+    }
+
+    function escapeIcs(text) {
+      return String(text).replace(/[\\;,]/g, "\\$&").replace(/\n/g, "\\n");
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function updateAndRender() {
+      balanceFamilyActivities(getPlan());
+      render();
+    }
+
+    function updateNumbers() {
+      const plan = getPlan();
+      balanceFamilyActivities(plan);
+      renderTotals(plan);
+      renderBreakdownChart(plan);
+      renderGoogleLinks(plan);
+      const familyIndex = plan.purposes.findIndex((item) => item.autoBalance);
+      if (familyIndex >= 0) {
+        const input = document.querySelector(`[data-purpose="${familyIndex}"][data-field="amount"]`);
+        if (input) input.value = Math.round(plan.purposes[familyIndex].amount);
+      }
+      saveState(false);
+    }
+
+    document.addEventListener("input", (event) => {
+      const target = event.target;
+      const plan = getPlan();
+      if (target.id === "activeMonth") {
+        state.activeMonth = target.value || thisMonth;
+        render();
+        return;
+      }
+      if (target.id === "alertDays") state.alertDays = target.value;
+      if (target.id === "bankBalance") plan.bankBalance = Number(target.value) || 0;
+      if (target.dataset.pay) {
+        const item = plan.paychecks[Number(target.dataset.pay)];
+        const field = target.dataset.field;
+        item[field] = field === "amount" ? Number(target.value) || 0 : target.value;
+      }
+      if (target.dataset.bill) {
+        const item = plan.bills[Number(target.dataset.bill)];
+        const field = target.dataset.field;
+        if (field === "amount" || field === "dueDay") item[field] = Number(target.value) || 0;
+        if (field !== "amount" && field !== "dueDay" && field !== "paid") item[field] = target.value;
+      }
+      if (target.dataset.purpose) {
+        const item = plan.purposes[Number(target.dataset.purpose)];
+        const field = target.dataset.field;
+        if (field === "amount" && !item.autoBalance) item[field] = Number(target.value) || 0;
+        if (field !== "amount") item[field] = target.value;
+      }
+      updateNumbers();
+    });
+
+    document.addEventListener("change", (event) => {
+      const target = event.target;
+      const plan = getPlan();
+      if (target.dataset.pay && target.dataset.field === "received") {
+        plan.paychecks[Number(target.dataset.pay)].received = target.value === "true";
+      }
+      if (target.dataset.bill && target.dataset.field === "cadence") {
+        plan.bills[Number(target.dataset.bill)].cadence = target.value;
+      }
+      if (target.dataset.bill && target.dataset.field === "paid") {
+        plan.bills[Number(target.dataset.bill)].paid = target.value === "true";
+      }
+      updateAndRender();
+    });
+
+    document.addEventListener("click", (event) => {
+      const plan = getPlan();
+      if (event.target.dataset.removePay !== undefined) {
+        plan.paychecks.splice(Number(event.target.dataset.removePay), 1);
+        updateAndRender();
+      }
+      if (event.target.dataset.markBill !== undefined) {
+        plan.bills[Number(event.target.dataset.markBill)].paid = event.target.dataset.paid === "true";
+        updateAndRender();
+      }
+      if (event.target.dataset.removeBill !== undefined) {
+        plan.bills.splice(Number(event.target.dataset.removeBill), 1);
+        updateAndRender();
+      }
+      if (event.target.dataset.removeHistory !== undefined) {
+        state.history = state.history.filter((item) => item.month !== event.target.dataset.removeHistory);
+        saveState(false);
+        renderHistory();
+      }
+    });
+
+    byId("addPayBtn").addEventListener("click", () => {
+      getPlan().paychecks.push({ source: "New pay", date: `${state.activeMonth}-01`, amount: 0, received: false });
+      updateAndRender();
+    });
+    byId("addBillBtn").addEventListener("click", () => {
+      getPlan().bills.push({ name: "New bill", category: "Other", amount: 0, dueDay: 1, cadence: "monthly", paid: false, note: "" });
+      updateAndRender();
+    });
+    byId("balanceBtn").addEventListener("click", updateAndRender);
+    byId("saveBtn").addEventListener("click", () => saveState(true));
+    byId("saveSnapshotBtn").addEventListener("click", saveSnapshot);
+    byId("downloadIcsBtn").addEventListener("click", downloadIcs);
+    byId("copySummaryBtn").addEventListener("click", copySummary);
+    byId("pinForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const ok = await unlockWithPin(byId("pinInput").value);
+      if (!ok) {
+        byId("pinError").textContent = "That PIN did not work.";
+        return;
+      }
+      sessionStorage.setItem(sessionKey, "true");
+      byId("pinInput").value = "";
+      byId("pinError").textContent = "";
+      await startApp();
+    });
+
+    if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
+
+    startApp();
+  </script>
+</body>
+</html>
