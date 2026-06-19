@@ -1,11 +1,8 @@
-const CACHE_NAME = "family-budget-dashboard-v2";
+const CACHE_NAME = "family-budget-dashboard-v3";
 const APP_SHELL = [
-  "./",
-  "./family-budget-dashboard.html",
-  "./manifest.webmanifest",
-  "./budget-app-icon.svg",
-  "./supabase-setup.sql",
-  "./shared-app-setup-notes.md"
+  "/",
+  "/manifest.webmanifest",
+  "/budget-app-icon.svg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -26,7 +23,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
     caches.match(event.request).then((cached) =>
-      cached || fetch(event.request).catch(() => caches.match("./family-budget-dashboard.html"))
+      cached || fetch(event.request).catch(() => caches.match("/"))
     )
   );
 });
