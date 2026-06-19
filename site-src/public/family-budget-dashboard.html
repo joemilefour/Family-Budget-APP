@@ -137,15 +137,16 @@
     }
 
     .overview, .history-card { grid-column: span 12; }
-    .pay-card, .paid-card, .purpose-card, .calendar-card, .chart-card { grid-column: span 6; }
+    .pay-card, .paid-card, .purpose-card, .transaction-card, .calendar-card, .chart-card { grid-column: span 6; }
     .bill-card { grid-column: span 12; }
     .bill-card { order: 1; }
-    .pay-card { order: 2; }
-    .paid-card { order: 3; }
-    .purpose-card { order: 4; }
-    .chart-card { order: 5; }
-    .calendar-card { order: 6; }
-    .history-card { order: 7; }
+    .transaction-card { order: 2; }
+    .pay-card { order: 3; }
+    .paid-card { order: 4; }
+    .purpose-card { order: 5; }
+    .chart-card { order: 6; }
+    .calendar-card { order: 7; }
+    .history-card { order: 8; }
 
     .overview {
       background: linear-gradient(180deg, var(--cash-bg), #ffffff 185px);
@@ -170,6 +171,11 @@
     .purpose-card {
       background: linear-gradient(180deg, var(--purpose-bg), #ffffff 155px);
       border-top-color: var(--gold);
+    }
+
+    .transaction-card {
+      background: linear-gradient(180deg, #f4efff, #ffffff 155px);
+      border-top-color: #8a4fbc;
     }
 
     .calendar-card {
@@ -217,6 +223,7 @@
     .pay-card h2 { color: #245b94; }
     .paid-card h2 { color: #0d665f; }
     .purpose-card h2 { color: #8a5a11; }
+    .transaction-card h2 { color: #7040a0; }
     .calendar-card h2 { color: #5646a3; }
     .chart-card h2 { color: #17658b; }
     .history-card h2 { color: #344054; }
@@ -267,6 +274,15 @@
     .overview .metric.expense { background: #fff1f0; }
     .overview .metric.status { background: #eaf7f5; }
     .overview .metric.savings { background: #edf5ff; }
+
+    .overview .metric.featured {
+      min-height: 132px;
+      box-shadow: 0 14px 34px rgba(31, 41, 51, .12);
+    }
+
+    .overview .metric.featured strong {
+      font-size: clamp(1.9rem, 4vw, 3rem);
+    }
 
     .status-line {
       margin-top: 14px;
@@ -327,6 +343,10 @@
 
     .purpose-card .row-card {
       border-left: 5px solid var(--gold);
+    }
+
+    .transaction-card .row-card {
+      border-left: 5px solid #8a4fbc;
     }
 
     .chart-wrap {
@@ -413,9 +433,37 @@
 
     .purpose-row {
       display: grid;
-      grid-template-columns: 1fr .68fr .78fr;
+      grid-template-columns: 1fr .68fr .78fr .78fr;
       gap: 10px;
       align-items: end;
+    }
+
+    .transaction-form {
+      display: grid;
+      grid-template-columns: .7fr 1fr .9fr .62fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+
+    .transaction-row {
+      display: grid;
+      grid-template-columns: .7fr 1fr .9fr .62fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .mini-stat {
+      display: grid;
+      gap: 2px;
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 1.25;
+    }
+
+    .mini-stat strong {
+      color: var(--ink);
+      font-size: .95rem;
     }
 
     .pill {
@@ -590,16 +638,153 @@
       header { grid-template-columns: 1fr; align-items: start; }
       .top-controls { justify-content: flex-start; }
       .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .pay-card, .bill-card, .paid-card, .purpose-card, .calendar-card, .chart-card { grid-column: span 12; }
+      .pay-card, .bill-card, .paid-card, .purpose-card, .transaction-card, .calendar-card, .chart-card { grid-column: span 12; }
     }
 
     @media (max-width: 760px) {
       .app-shell { width: min(100% - 20px, 1320px); padding-top: 14px; }
       section { padding: 14px; }
-      .metrics, .calendar-actions { grid-template-columns: 1fr; }
-      .pay-row, .bill-row, .purpose-row {
+      .overview {
+        padding: 16px;
+        background: linear-gradient(180deg, #eaf7ef 0, #ffffff 245px);
+      }
+      .overview .section-head {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .overview .section-head h2 {
+        font-size: 1rem;
+      }
+      .overview .section-head .hint {
+        font-size: .82rem;
+        line-height: 1.35;
+      }
+      .overview .pill {
+        justify-self: start;
+      }
+      .overview > label {
+        max-width: none !important;
+        margin-bottom: 12px !important;
+      }
+      .calendar-actions { grid-template-columns: 1fr; }
+      .metrics {
+        display: grid;
         grid-template-columns: 1fr;
+        gap: 8px;
+        border: 0;
+        border-radius: 0;
+        overflow: visible;
+        background: transparent;
+      }
+      .metric,
+      .overview .metric.featured {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: none;
+        background: #ffffff;
+      }
+      .overview .metric:first-child {
+        display: block;
+        padding: 18px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #176b43, #259160);
+        color: #ffffff;
+        box-shadow: 0 14px 32px rgba(31, 122, 77, .22);
+      }
+      .metric span {
+        font-size: .78rem;
+        letter-spacing: .03em;
+      }
+      .metric strong,
+      .overview .metric.featured strong {
+        margin-top: 0;
+        font-size: 1.25rem;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .overview .metric:first-child span {
+        color: rgba(255, 255, 255, .78);
+        display: block;
+        margin-bottom: 10px;
+      }
+      .overview .metric:first-child strong {
+        color: #ffffff;
+        display: block;
+        font-size: clamp(2.25rem, 13vw, 3.25rem);
+        line-height: .95;
+        text-align: left;
+      }
+      .overview .metric:nth-child(n+2) {
+        background: #ffffff;
+      }
+      .overview .metric:nth-child(2) {
+        border-color: #bfe4ca;
+        background: #f2fbf5;
+      }
+      .overview .metric:nth-child(3),
+      .overview .metric:nth-child(4) {
+        border-color: #f2cbd1;
+        background: #fff8f8;
+      }
+      .overview .metric:nth-child(5) {
+        border-color: #bfe4df;
+        background: #f2fbfa;
+      }
+      .overview .metric:nth-child(6) {
+        border-color: #cfe0f5;
+        background: #f5f9ff;
+      }
+      .overview .metric:nth-child(n+2) span {
+        color: #53616d;
+      }
+      .overview .metric:nth-child(n+2) strong {
+        color: #1f2933;
+      }
+      .overview .status-line {
+        margin-top: 12px;
+        font-size: .86rem;
+        line-height: 1.4;
+      }
+      .pay-row, .bill-row, .purpose-row, .transaction-row, .transaction-form {
+        grid-template-columns: 1fr 1fr;
         align-items: stretch;
+        gap: 8px;
+      }
+      .bill-row label:first-child,
+      .pay-row label:first-child,
+      .purpose-row label:first-child,
+      .transaction-row label:nth-child(2),
+      .transaction-form label:nth-child(2) {
+        grid-column: 1 / -1;
+      }
+      .bill-row .button,
+      .pay-row .button,
+      .transaction-row .button,
+      .transaction-form .button {
+        min-height: 38px;
+      }
+      .purpose-row .mini-stat {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .row-card {
+        padding: 10px;
+      }
+      input, select {
+        min-height: 38px;
+        padding: 7px 9px;
+      }
+      label {
+        gap: 4px;
+        font-size: .78rem;
       }
       .chart-wrap {
         grid-template-columns: 1fr;
@@ -657,11 +842,11 @@
           <input id="bankBalance" type="number" min="0" step="1">
         </label>
         <div class="metrics">
-          <div class="metric cash">
+          <div class="metric cash featured">
             <span>Current bank total</span>
             <strong id="bankBalanceMetric">$0</strong>
           </div>
-          <div class="metric income">
+          <div class="metric income featured">
             <span>Received pay</span>
             <strong id="receivedPay">$0</strong>
           </div>
@@ -721,18 +906,43 @@
         <div class="section-head">
           <div>
             <h2>Every Dollar's Purpose</h2>
-            <p class="hint">House, emergency, and miscellaneous stay fixed. Family activities receives the remaining balance.</p>
+            <p class="hint">Transportation is monthly with a weekly view. Transactions reduce the bucket they belong to.</p>
           </div>
           <button class="button" id="balanceBtn" type="button">Balance family activities</button>
         </div>
         <div class="row-list" id="purposeList"></div>
       </section>
 
+      <section class="transaction-card">
+        <div class="section-head">
+          <div>
+            <h2>Transactions</h2>
+            <p class="hint">Add grocery, misc, transportation, family, house, or savings spending as it happens.</p>
+          </div>
+        </div>
+        <div class="transaction-form">
+          <label>Date
+            <input id="transactionDate" type="date">
+          </label>
+          <label>Description
+            <input id="transactionName" placeholder="Walmart, gas, supplies">
+          </label>
+          <label>Bucket
+            <select id="transactionBucket"></select>
+          </label>
+          <label>Amount
+            <input id="transactionAmount" type="number" min="0" step="1">
+          </label>
+          <button class="button primary" id="addTransactionBtn" type="button">Add</button>
+        </div>
+        <div class="row-list" id="transactionList"></div>
+      </section>
+
       <section class="chart-card">
         <div class="section-head">
           <div>
             <h2>Expense And Fund Breakdown</h2>
-            <p class="hint">A quick view of where the monthly plan is going.</p>
+            <p class="hint">Planned budget and what has actually been spent this month.</p>
           </div>
         </div>
         <div class="chart-wrap">
@@ -781,6 +991,7 @@
                 <th>Income</th>
                 <th>Bills</th>
                 <th>Goals</th>
+                <th>Actual spent</th>
                 <th>Family activities</th>
                 <th>Safe balance</th>
                 <th>Left</th>
@@ -813,7 +1024,6 @@
       { name: "Internet", category: "Utilities", amount: 129, dueDay: 10, cadence: "monthly", paid: false, note: "Adjust due date if needed" },
       { name: "Light", category: "Utilities", amount: 275, dueDay: 14, cadence: "monthly", paid: false, note: "$250-$300 range" },
       { name: "Debt payment", category: "Debt", amount: 818, dueDay: 16, cadence: "monthly", paid: false, note: "Credit card and loan" },
-      { name: "Groceries", category: "Groceries", amount: 700, dueDay: 7, cadence: "biweekly", paid: false, note: "Every two weeks" },
       { name: "Babysitter", category: "Childcare", amount: 180, dueDay: 12, cadence: "biweekly", paid: false, note: "Every two weeks" },
       { name: "Yard maintenance", category: "Home upkeep", amount: 50, dueDay: 13, cadence: "biweekly", paid: false, note: "Twice a month" },
       { name: "Gym membership", category: "Health", amount: 75, dueDay: 20, cadence: "monthly", paid: false, note: "Adjust due date if needed" },
@@ -821,8 +1031,10 @@
     ];
 
     const basePurposes = [
+      { name: "Groceries", category: "Groceries", amount: 1517, locked: true },
       { name: "House fund", category: "House fund", amount: 300, locked: true },
       { name: "Emergency fund", category: "Emergency fund", amount: 250, locked: true },
+      { name: "Transportation", category: "Transportation", amount: 0, weeklySplit: true },
       { name: "Miscellaneous", category: "Miscellaneous", amount: 750, locked: true },
       { name: "Family activities", category: "Family activities", amount: 0, autoBalance: true }
     ];
@@ -939,7 +1151,8 @@
           bankBalance: 0,
           paychecks: generatePaychecks(month),
           bills: structuredClone(baseBills),
-          purposes: structuredClone(basePurposes)
+          purposes: structuredClone(basePurposes),
+          transactions: []
         };
       }
       ensurePlanShape(state.months[month]);
@@ -949,9 +1162,17 @@
 
     function ensurePlanShape(plan) {
       if (typeof plan.bankBalance !== "number") plan.bankBalance = 0;
+      if (!Array.isArray(plan.transactions)) plan.transactions = [];
       plan.bills.forEach((bill) => {
         if (typeof bill.paid !== "boolean") bill.paid = false;
       });
+      const groceryBillIndex = plan.bills.findIndex((bill) => bill.name === "Groceries");
+      if (groceryBillIndex >= 0) {
+        const groceryBill = plan.bills[groceryBillIndex];
+        const groceryPurpose = plan.purposes.find((purpose) => purpose.name === "Groceries");
+        if (groceryPurpose) groceryPurpose.amount = Math.round(monthlyAmount(groceryBill));
+        plan.bills.splice(groceryBillIndex, 1);
+      }
       basePurposes.forEach((basePurpose) => {
         const exists = plan.purposes.some((purpose) => purpose.name === basePurpose.name);
         if (!exists) {
@@ -986,9 +1207,12 @@
       byId("activeMonth").value = state.activeMonth;
       byId("alertDays").value = state.alertDays;
       byId("bankBalance").value = Math.round(plan.bankBalance || 0);
+      byId("transactionDate").value = byId("transactionDate").value || isoDate(new Date());
       renderPaychecks(plan);
       renderBills(plan);
       renderPurposes(plan);
+      renderTransactionBucketOptions(plan);
+      renderTransactions(plan);
       renderTotals(plan);
       renderBreakdownChart(plan);
       renderGoogleLinks(plan);
@@ -1063,6 +1287,9 @@
       const list = byId("purposeList");
       list.innerHTML = "";
       plan.purposes.forEach((purpose, index) => {
+        const spent = transactionTotalForBucket(plan, purpose.name);
+        const remaining = (Number(purpose.amount) || 0) - spent;
+        const weekly = purpose.weeklySplit ? `<span>Weekly: ${fmt.format((Number(purpose.amount) || 0) / weeksInMonth(state.activeMonth))}</span>` : "";
         const row = document.createElement("div");
         row.className = "row-card purpose-row";
         row.innerHTML = `
@@ -1075,9 +1302,54 @@
           <label>Monthly amount
             <input data-purpose="${index}" data-field="amount" type="number" min="0" step="1" value="${Math.round(purpose.amount)}" ${purpose.autoBalance ? "readonly" : ""}>
           </label>
+          <div class="mini-stat">
+            <span>Spent: <strong>${fmt.format(spent)}</strong></span>
+            <span>Left: <strong style="color:${remaining < 0 ? "var(--rose)" : "inherit"}">${fmt.format(remaining)}</strong></span>
+            ${weekly}
+          </div>
         `;
         list.appendChild(row);
       });
+    }
+
+    function renderTransactionBucketOptions(plan) {
+      const selected = byId("transactionBucket").value;
+      const buckets = transactionBuckets(plan);
+      byId("transactionBucket").innerHTML = buckets.map((bucket) => `<option value="${escapeHtml(bucket)}" ${bucket === selected ? "selected" : ""}>${escapeHtml(bucket)}</option>`).join("");
+    }
+
+    function renderTransactions(plan) {
+      const list = byId("transactionList");
+      if (!plan.transactions.length) {
+        list.innerHTML = `<div class="empty-state">No transactions yet.</div>`;
+        return;
+      }
+      list.innerHTML = "";
+      plan.transactions
+        .map((transaction, index) => ({ transaction, index }))
+        .sort((a, b) => b.transaction.date.localeCompare(a.transaction.date))
+        .forEach(({ transaction, index }) => {
+          const row = document.createElement("div");
+          row.className = "row-card transaction-row";
+          row.innerHTML = `
+            <label>Date
+              <input data-transaction="${index}" data-field="date" type="date" value="${transaction.date}">
+            </label>
+            <label>Description
+              <input data-transaction="${index}" data-field="name" value="${escapeHtml(transaction.name)}">
+            </label>
+            <label>Bucket
+              <select data-transaction="${index}" data-field="bucket">
+                ${transactionBuckets(plan).map((bucket) => `<option value="${escapeHtml(bucket)}" ${bucket === transaction.bucket ? "selected" : ""}>${escapeHtml(bucket)}</option>`).join("")}
+              </select>
+            </label>
+            <label>Amount
+              <input data-transaction="${index}" data-field="amount" type="number" min="0" step="1" value="${Math.round(transaction.amount)}">
+            </label>
+            <button class="button danger" data-remove-transaction="${index}" type="button">Remove</button>
+          `;
+          list.appendChild(row);
+        });
     }
 
     function renderTotals(plan) {
@@ -1087,6 +1359,7 @@
       const left = income - expenses - purposeTotal(plan);
       const received = receivedPayTotal(plan);
       const paid = paidBillTotal(plan);
+      const spent = transactionGrandTotal(plan);
       const currentBank = currentBankTotal(plan);
       const unpaid = unpaidBillTotal(plan);
       const safe = currentBank - unpaid;
@@ -1103,12 +1376,13 @@
         ? `After pending bills, this month is short by ${fmt.format(Math.abs(safe))}.`
         : left < -1
           ? `This month is short by ${fmt.format(Math.abs(left))}. Family activities is at $0, so lower a bill/purpose or add income.`
-          : `${fmt.format(safe)} is safe after pending bills. Current bank total is starting balance plus received pay minus paid bills.`;
+          : `${fmt.format(safe)} is safe after pending bills. Current bank total also subtracts ${fmt.format(spent)} in entered transactions.`;
     }
 
     function renderBreakdownChart(plan) {
       const rows = breakdownRows(plan);
       const total = rows.reduce((sum, row) => sum + row.amount, 0) || 1;
+      const spentTotals = transactionTotals(plan);
       const colors = ["#c24152", "#2563a8", "#0f766e", "#b7791f", "#6656b8", "#1f7a4d", "#1976a3", "#8a4f7d", "#667085", "#d97706", "#0891b2", "#be123c"];
       let cursor = 0;
       const stops = rows.map((row, index) => {
@@ -1121,11 +1395,13 @@
       byId("breakdownTotal").innerHTML = `${fmt.format(total)}<span>Total planned</span>`;
       byId("breakdownLegend").innerHTML = rows.map((row, index) => {
         const percent = Math.round(row.amount / total * 100);
+        const spent = spentTotals.get(row.name) || 0;
+        const remaining = row.amount - spent;
         return `
           <div class="legend-row">
             <span class="legend-swatch" style="background:${colors[index % colors.length]}"></span>
             <strong>${escapeHtml(row.name)}</strong>
-            <span>${fmt.format(row.amount)} - ${percent}%</span>
+            <span>${fmt.format(row.amount)} - ${percent}%<br><small>Spent ${fmt.format(spent)} | Left ${fmt.format(remaining)}</small></span>
           </div>
         `;
       }).join("");
@@ -1139,6 +1415,42 @@
         .map(([name, amount]) => ({ name, amount }))
         .filter((row) => row.amount > 0)
         .sort((a, b) => b.amount - a.amount);
+    }
+
+    function transactionBuckets(plan) {
+      const buckets = new Set([
+        "Groceries",
+        "Transportation",
+        "Miscellaneous",
+        "Family activities",
+        "House fund",
+        "Emergency fund"
+      ]);
+      plan.purposes.forEach((purpose) => buckets.add(purpose.name));
+      plan.bills.forEach((bill) => buckets.add(bill.category || bill.name));
+      return [...buckets].filter(Boolean).sort((a, b) => a.localeCompare(b));
+    }
+
+    function transactionTotalForBucket(plan, bucket) {
+      return plan.transactions.reduce((sum, transaction) => {
+        return sum + (transaction.bucket === bucket ? Number(transaction.amount) || 0 : 0);
+      }, 0);
+    }
+
+    function transactionTotals(plan) {
+      const totals = new Map();
+      plan.transactions.forEach((transaction) => addCategory(totals, transaction.bucket, Number(transaction.amount) || 0));
+      return totals;
+    }
+
+    function transactionGrandTotal(plan) {
+      return plan.transactions.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0);
+    }
+
+    function weeksInMonth(month) {
+      const [year, monthNumber] = month.split("-").map(Number);
+      const days = new Date(year, monthNumber, 0).getDate();
+      return days / 7;
     }
 
     function renderTimeline(plan) {
@@ -1191,7 +1503,7 @@
     function renderHistory() {
       const rows = byId("historyRows");
       if (!state.history.length) {
-        rows.innerHTML = `<tr><td colspan="8" class="empty-state">No snapshots saved yet.</td></tr>`;
+        rows.innerHTML = `<tr><td colspan="9" class="empty-state">No snapshots saved yet.</td></tr>`;
         return;
       }
       rows.innerHTML = state.history
@@ -1203,6 +1515,7 @@
             <td>${fmt.format(item.income)}</td>
             <td>${fmt.format(item.expenses)}</td>
             <td>${fmt.format(item.goals)}</td>
+            <td>${fmt.format(item.actualSpent || 0)}</td>
             <td>${fmt.format(item.familyActivities)}</td>
             <td>${fmt.format(item.safeBalance || 0)}</td>
             <td>${fmt.format(item.left)}</td>
@@ -1239,7 +1552,7 @@
     }
 
     function currentBankTotal(plan) {
-      return (Number(plan.bankBalance) || 0) + receivedPayTotal(plan) - paidBillTotal(plan);
+      return (Number(plan.bankBalance) || 0) + receivedPayTotal(plan) - paidBillTotal(plan) - transactionGrandTotal(plan);
     }
 
     function purposeTotal(plan) {
@@ -1268,6 +1581,7 @@
         expenses: Math.round(billTotal(plan)),
         goals: Math.round(purposeTotal(plan)),
         familyActivities: Math.round(familyActivitiesAmount(plan)),
+        actualSpent: Math.round(transactionGrandTotal(plan)),
         bankBalance: Math.round(currentBankTotal(plan)),
         unpaidBills: Math.round(unpaidBillTotal(plan)),
         safeBalance: Math.round(currentBankTotal(plan) - unpaidBillTotal(plan)),
@@ -1424,6 +1738,11 @@
         if (field === "amount" && !item.autoBalance) item[field] = Number(target.value) || 0;
         if (field !== "amount") item[field] = target.value;
       }
+      if (target.dataset.transaction) {
+        const item = plan.transactions[Number(target.dataset.transaction)];
+        const field = target.dataset.field;
+        item[field] = field === "amount" ? Number(target.value) || 0 : target.value;
+      }
       updateNumbers();
     });
 
@@ -1438,6 +1757,9 @@
       }
       if (target.dataset.bill && target.dataset.field === "paid") {
         plan.bills[Number(target.dataset.bill)].paid = target.value === "true";
+      }
+      if (target.dataset.transaction && target.dataset.field === "bucket") {
+        plan.transactions[Number(target.dataset.transaction)].bucket = target.value;
       }
       updateAndRender();
     });
@@ -1461,6 +1783,10 @@
         saveState(false);
         renderHistory();
       }
+      if (event.target.dataset.removeTransaction !== undefined) {
+        plan.transactions.splice(Number(event.target.dataset.removeTransaction), 1);
+        updateAndRender();
+      }
     });
 
     byId("addPayBtn").addEventListener("click", () => {
@@ -1469,6 +1795,21 @@
     });
     byId("addBillBtn").addEventListener("click", () => {
       getPlan().bills.push({ name: "New bill", category: "Other", amount: 0, dueDay: 1, cadence: "monthly", paid: false, note: "" });
+      updateAndRender();
+    });
+    byId("addTransactionBtn").addEventListener("click", () => {
+      const plan = getPlan();
+      const amount = Number(byId("transactionAmount").value) || 0;
+      const name = byId("transactionName").value.trim() || "Transaction";
+      if (amount <= 0) return;
+      plan.transactions.push({
+        date: byId("transactionDate").value || isoDate(new Date()),
+        name,
+        bucket: byId("transactionBucket").value || "Miscellaneous",
+        amount
+      });
+      byId("transactionName").value = "";
+      byId("transactionAmount").value = "";
       updateAndRender();
     });
     byId("balanceBtn").addEventListener("click", updateAndRender);
