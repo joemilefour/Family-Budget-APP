@@ -826,8 +826,12 @@
         </label>
         <button class="button" id="saveSnapshotBtn" type="button">Save month snapshot</button>
         <button class="button primary" id="saveBtn" type="button">Save plan</button>
+        <button class="button" id="notifyBtn" type="button" title="Enable bill &amp; transaction notifications" hidden>🔔 Enable Alerts</button>
       </div>
     </header>
+
+    <!-- Toast notification -->
+    <div id="toastBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f7a4d;color:#fff;padding:12px 20px;border-radius:10px;font-size:.95rem;box-shadow:0 4px 18px rgba(0,0,0,.18);z-index:9999;min-width:240px;text-align:center;pointer-events:none;"></div>
 
     <div class="grid">
       <section class="overview">
@@ -1134,6 +1138,75 @@
       return await sha256(pin) === cloudConfig.pinHash;
     }
 
+    // ── Notifications ──────────────────────────────────────────────────────────
+
+    function showToast(msg, durationMs = 3000) {
+      const toast = byId("toastBanner");
+      toast.textContent = msg;
+      toast.style.display = "block";
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => { toast.style.display = "none"; }, durationMs);
+    }
+
+    function sendPushNotification(title, body) {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      try {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification(title, { body, icon: "./budget-app-icon.svg", badge: "./budget-app-icon.svg" });
+          }).catch(() => new Notification(title, { body, icon: "./budget-app-icon.svg" }));
+        } else {
+          new Notification(title, { body, icon: "./budget-app-icon.svg" });
+        }
+      } catch { /* silently fail */ }
+    }
+
+    function checkBillsDueToday() {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      const today = new Date();
+      const todayDay = today.getDate();
+      const todayMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+      if (state.activeMonth !== todayMonth) return;
+      const plan = getPlan();
+      const notifiedKey = `budget-notified-${todayMonth}-${todayDay}`;
+      const alreadyNotified = new Set(JSON.parse(localStorage.getItem(notifiedKey) || "[]"));
+      const newlyNotified = [];
+      plan.bills.forEach((bill, idx) => {
+        if (bill.paid) return;
+        if (clampDueDay(bill.dueDay) === todayDay && !alreadyNotified.has(String(idx))) {
+          const amt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(bill.amount);
+          sendPushNotification(`Bill due today: ${bill.name}`, `${amt} is due today. Open the app to mark it paid.`);
+          newlyNotified.push(String(idx));
+        }
+      });
+      if (newlyNotified.length) {
+        localStorage.setItem(notifiedKey, JSON.stringify([...alreadyNotified, ...newlyNotified]));
+      }
+    }
+
+    function updateNotifyButton() {
+      const btn = byId("notifyBtn");
+      if (!btn || !("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        btn.hidden = true;
+      } else if (Notification.permission === "denied") {
+        btn.textContent = "🔕 Alerts blocked";
+        btn.hidden = false;
+      } else {
+        btn.hidden = false;
+      }
+    }
+
+    async function enableNotifications() {
+      if (!("Notification" in window)) return;
+      const result = await Notification.requestPermission();
+      updateNotifyButton();
+      if (result === "granted") {
+        showToast("✅ Notifications enabled! You'll be alerted for bills and transactions.");
+        checkBillsDueToday();
+      }
+    }
+
     async function startApp() {
       if (cloudConfig.pinHash && sessionStorage.getItem(sessionKey) !== "true") {
         byId("lockScreen").hidden = false;
@@ -1143,6 +1216,8 @@
       byId("lockScreen").hidden = true;
       await loadCloudState();
       render();
+      updateNotifyButton();
+      checkBillsDueToday();
     }
 
     function getPlan(month = state.activeMonth) {
@@ -1802,16 +1877,21 @@
       const amount = Number(byId("transactionAmount").value) || 0;
       const name = byId("transactionName").value.trim() || "Transaction";
       if (amount <= 0) return;
+      const bucket = byId("transactionBucket").value || "Miscellaneous";
       plan.transactions.push({
         date: byId("transactionDate").value || isoDate(new Date()),
         name,
-        bucket: byId("transactionBucket").value || "Miscellaneous",
+        bucket,
         amount
       });
       byId("transactionName").value = "";
       byId("transactionAmount").value = "";
+      const fmtAmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+      showToast(`✅ ${fmtAmt} added to ${bucket}`);
+      sendPushNotification(`Transaction added: ${name}`, `${fmtAmt} recorded under ${bucket}.`);
       updateAndRender();
     });
+    byId("notifyBtn").addEventListener("click", enableNotifications);
     byId("balanceBtn").addEventListener("click", updateAndRender);
     byId("saveBtn").addEventListener("click", () => saveState(true));
     byId("saveSnapshotBtn").addEventListener("click", saveSnapshot);
